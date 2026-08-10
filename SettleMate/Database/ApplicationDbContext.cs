@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SettleMate.Database.Entities;
+using SettleMate.Database.Entities.Identity;
 using SettleMate.Features.Book;
 using System.Data;
 

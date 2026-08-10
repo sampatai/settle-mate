@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace SettleMate.Database.Entities;
+namespace SettleMate.Database.Entities.Identity;
 
 public class UserLogin : IdentityUserLogin<string>
 {

@@ -12,17 +12,17 @@ public class AuditableInterceptor : SaveChangesInterceptor
         CancellationToken cancellationToken = default)
     {
         var context = eventData.Context!;
-        var entries = context.ChangeTracker.Entries<IAuditableEntity>();
+        var entries = context.ChangeTracker.Entries<AuditableEntity>();
 
         foreach (var entry in entries)
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedAtUtc = DateTime.UtcNow;
+                entry.Entity.CreateTimestamps(DateTime.UtcNow, DateTime.UtcNow);
             }
             else if (entry.State == EntityState.Modified)
             {
-                entry.Entity.UpdatedAtUtc = DateTime.UtcNow;
+                entry.Entity.UpdateTimestamps(DateTime.UtcNow);
             }
         }
 

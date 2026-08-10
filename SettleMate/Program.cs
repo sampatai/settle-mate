@@ -1,3 +1,4 @@
+using Carter;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -5,7 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using SettleMate.Configuration;
 using SettleMate.Database;
-using SettleMate.Database.Entities;
+using SettleMate.Database.Entities.Identity;
 using SettleMate.Exceptions;
 using SettleMate.Extensions;
 using SettleMate.Features.Book.CreateBook;
@@ -55,11 +56,12 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.RegisterApiEndpointsFromAssembly(Assembly.GetExecutingAssembly());
+
 builder.Services.AddHealthChecksConfiguration();
 builder.Services.AddValidatorsFromAssembly(typeof(CreateBookValidator).Assembly);
 builder.Services.AddHandlersFromAssembly(typeof(Program).Assembly);
 builder.Services.AddExceptionHandler<CustomExceptionHandler>().AddProblemDetails();
-
+builder.Services.AddCarter();
 var app = builder.Build();
 
 app.MapApiEndpoints();
@@ -76,6 +78,8 @@ app.MapScalarApiReference(options =>
 });
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapCarter();
+
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 
