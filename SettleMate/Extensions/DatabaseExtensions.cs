@@ -8,10 +8,20 @@ namespace SettleMate.Extensions
         public static IServiceCollection AddSQLDatabaseConfiguration(this IServiceCollection services,
             IConfiguration configuration)
         {
+            var connectionString = configuration.GetConnectionString("connection");
 
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddSingleton<AuditableInterceptor>();
+
+            services.AddDbContext<ApplicationDbContext>((provider, options) =>
             {
-                options.UseNpgsql(configuration.GetConnectionString("connection"));
+                var interceptor = provider.GetRequiredService<AuditableInterceptor>();
+
+                options.EnableSensitiveDataLogging()
+                    .UseSqlServer(connectionString, sqlServerOptions =>
+                    {
+                        sqlServerOptions.MigrationsHistoryTable(DatabaseConsts.MigrationTableName, DatabaseConsts.Schema);
+                    })
+                    .AddInterceptors(interceptor);
             });
 
             return services;
