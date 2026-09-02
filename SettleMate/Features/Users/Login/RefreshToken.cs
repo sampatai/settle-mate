@@ -1,5 +1,6 @@
 ﻿using Carter;
 using Microsoft.AspNetCore.Mvc;
+using SettleMate.Features.Users.Login;
 using SettleMate.Features.Users.Shared;
 
 namespace JwtAndRefreshTokens.Features.Users;
@@ -14,23 +15,19 @@ public class RefreshTokenEndpoint : ICarterModule
 
 	private static async Task<IResult> Handle(
 		[FromBody] RefreshTokenRequest request,
-		IClientAuthorizationService authorizationService,
+		RefreshTokenHandler handler,
 		CancellationToken cancellationToken)
 	{
-		var result = await authorizationService.RefreshTokenAsync(
-			request.Token,
-			request.RefreshToken,
-			cancellationToken);
+		var result = await handler.HandleAsync(request, cancellationToken);
 
 		if (!result.IsSuccess)
 		{
 			return Results.Problem(
 				statusCode: 400,
-				detail: result.Errors?[0].Message,
-				title: result.Errors?[0].Code);
+				detail: result.Error.Description,
+				title: result.Error.Code);
 		}
 
-		var response = new RefreshTokenResponse(result.Data!.Token, result.Data.RefreshToken);
-		return Results.Ok(response);
+		return Results.Ok(result.Value);
 	}
 }

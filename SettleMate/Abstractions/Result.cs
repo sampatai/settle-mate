@@ -43,6 +43,7 @@ namespace SettleMate.Abstractions
             return new(default, false, error);
         }
 
+
         public static Result<TValue> Create<TValue>(TValue? value)
         {
             return value is not null ? Success(value) : Failure<TValue>(Error.Null);
