@@ -31,27 +31,8 @@ builder.Services
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddOptions<AuthConfiguration>()
-    .Bind(builder.Configuration.GetSection(nameof(AuthConfiguration)));
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["AuthConfiguration:Issuer"],
-            ValidAudience = builder.Configuration["AuthConfiguration:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AuthConfiguration:Key"]!))
-        };
-    });
+builder.Services.AddAuthServices(builder.Configuration);
 
 builder.Services.AddAuthorization();
 
