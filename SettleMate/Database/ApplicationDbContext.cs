@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SettleMate.Database.Entities.Identity;
-using SettleMate.Features.Book;
+using SettleMate.Features.Users.Login;
 using System.Data;
 
 namespace SettleMate.Database;
@@ -13,7 +13,7 @@ public class ApplicationDbContext(
             RoleClaim, UserToken>
         (options)
 {
-    public DbSet<Book> Books { get; set; } = null!;
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

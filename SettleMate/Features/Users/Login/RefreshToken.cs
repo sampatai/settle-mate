@@ -20,14 +20,15 @@ public class RefreshTokenEndpoint : ICarterModule
 	{
 		var result = await handler.HandleAsync(request, cancellationToken);
 
-		if (!result.IsSuccess)
-		{
-			return Results.Problem(
-				statusCode: 400,
-				detail: result.Error.Description,
-				title: result.Error.Code);
-		}
+        if (!result.IsSuccess)
+        {
+            return Results.Problem(
+                statusCode: 400,
+                detail: result.Errors?[0].Description,
+                title: result.Errors?[0].Code);
+        }
 
-		return Results.Ok(result.Value);
-	}
+        var response = new RefreshTokenResponse(result.Data!.Token, result.Data.RefreshToken);
+        return Results.Ok(response);
+    }
 }

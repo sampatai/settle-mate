@@ -1,4 +1,4 @@
 ﻿namespace SettleMate.Features.Users.Shared
 {
-    public sealed record UserResponse(string Token);
+    public record LoginResponse(string Token, string RefreshToken);
 }

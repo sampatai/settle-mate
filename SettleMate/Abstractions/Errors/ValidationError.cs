@@ -1,4 +1,6 @@
-﻿namespace SettleMate.Abstractions.Errors;
+﻿using System.Linq;
+
+namespace SettleMate.Abstractions.Errors;
 
 public sealed record ValidationError : Error
 {
@@ -13,6 +15,11 @@ public sealed record ValidationError : Error
 
     public Error[] Errors { get; }
 
-    public static ValidationError FromResults(IEnumerable<Result> results) =>
-        new(results.Where(r => r.IsFailure).Select(r => r.Error).ToArray());
+    public static ValidationError FromResults<T>(IEnumerable<Result<T>> results) =>
+        new(
+            results
+                .Where(r => !r.IsSuccess)
+                .SelectMany(r => r.Errors ?? new List<Error>())
+                .ToArray()
+        );
 }

@@ -1,7 +1,6 @@
 using System.Reflection;
 using SettleMate.Abstractions;
 using SettleMate.Extensions;
-using SettleMate.Pipelines;
 
 public static class HandlerRegistrationExtensions
 {
@@ -23,8 +22,7 @@ public static class HandlerRegistrationExtensions
             }
         }
 
-        services.Decorate(typeof(IHandler<,>), typeof(ValidationDecorator<,>));
-        services.Decorate(typeof(IHandler<,>), typeof(LoggingDecorator<,>));
+        
 
         services.AddScoped<IEventDispatcher, EventDispatcher>();
 
