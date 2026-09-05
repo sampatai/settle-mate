@@ -28,16 +28,30 @@ public sealed class UpdateUserRoleHandler(
         }
 
         var currentRoles = await userManager.GetRolesAsync(user);
-        var removeResult = await userManager.RemoveFromRolesAsync(user, currentRoles);
-        if (!removeResult.Succeeded)
+        if (currentRoles.Count == 1 && currentRoles[0].Equals(role, StringComparison.OrdinalIgnoreCase))
         {
-            return Result<UserResponse>.Failure(UserErrors.FromIdentityErrors(removeResult.Errors));
+            user.UpdatedAtUtc = DateTime.UtcNow;
+            await userManager.UpdateAsync(user);
+            return Result<UserResponse>.Success(UserResponse.FromUser(user, [role]));
         }
 
-        var addResult = await userManager.AddToRoleAsync(user, role);
+        var addResult = currentRoles.Contains(role, StringComparer.OrdinalIgnoreCase)
+            ? IdentityResult.Success
+            : await userManager.AddToRoleAsync(user, role);
         if (!addResult.Succeeded)
         {
             return Result<UserResponse>.Failure(UserErrors.FromIdentityErrors(addResult.Errors));
+        }
+
+        var rolesToRemove = currentRoles
+            .Where(currentRole => !currentRole.Equals(role, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        var removeResult = rolesToRemove.Count == 0
+            ? IdentityResult.Success
+            : await userManager.RemoveFromRolesAsync(user, rolesToRemove);
+        if (!removeResult.Succeeded)
+        {
+            return Result<UserResponse>.Failure(UserErrors.FromIdentityErrors(removeResult.Errors));
         }
 
         user.UpdatedAtUtc = DateTime.UtcNow;

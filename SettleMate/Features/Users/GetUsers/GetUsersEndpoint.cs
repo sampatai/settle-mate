@@ -1,5 +1,5 @@
 using Carter;
-using Microsoft.AspNetCore.Authorization;
+using SettleMate.Authorization;
 using SettleMate.Abstractions;
 using SettleMate.Abstractions.Errors;
 using SettleMate.Constants;
@@ -19,7 +19,7 @@ public sealed class GetUsersEndpoint : ICarterModule
                 return Results.Ok(result.Data);
             })
             .WithTags(ApiTags.Users)
-            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" })
+            .RequireAuthorization(Permissions.UsersRead)
             .Produces<IReadOnlyList<UserResponse>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);

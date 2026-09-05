@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SettleMate.Abstractions;
 using SettleMate.Abstractions.Errors;
+using SettleMate.Authorization;
 using SettleMate.Constants;
 using SettleMate.Features.Users.Shared;
 using System.Security.Claims;
@@ -39,7 +40,7 @@ public sealed class UpdateUserEndpoint : ICarterModule
                         detail: result.Errors[0].Description);
             })
             .WithTags(ApiTags.Users)
-            .RequireAuthorization()
+            .RequireAuthorization(Permissions.UsersUpdate)
             .Produces<UserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)

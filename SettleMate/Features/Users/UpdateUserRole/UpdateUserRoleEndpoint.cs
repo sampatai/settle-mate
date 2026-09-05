@@ -1,8 +1,8 @@
 using Carter;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SettleMate.Abstractions;
 using SettleMate.Abstractions.Errors;
+using SettleMate.Authorization;
 using SettleMate.Constants;
 using SettleMate.Features.Users.Shared;
 
@@ -31,7 +31,7 @@ public sealed class UpdateUserRoleEndpoint : ICarterModule
                         detail: result.Errors[0].Description);
             })
             .WithTags(ApiTags.Users)
-            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" })
+            .RequireAuthorization(Permissions.UsersManageRoles)
             .Produces<UserResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)

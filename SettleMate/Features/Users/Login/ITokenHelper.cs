@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SettleMate.Abstractions.Errors;
+using SettleMate.Authorization;
 using SettleMate.Configuration;
 using SettleMate.Database;
 using SettleMate.Database.Entities.Identity;
@@ -100,12 +101,18 @@ namespace SettleMate.Features.Users.Login
         private async Task<(string token, string refreshToken)> GenerateJwtAndRefreshTokenAsync(User user, string? existingRefreshToken)
         {
             var roles = await userManager.GetRolesAsync(user);
-            var userRole = roles.FirstOrDefault() ?? "user";
+            var userRoles = roles.Count > 0 ? roles : ["User"];
+            var roleClaims = new List<Claim>();
+            foreach (var userRole in userRoles)
+            {
+                var role = await roleManager.FindByNameAsync(userRole);
+                if (role is not null)
+                {
+                    roleClaims.AddRange(await roleManager.GetClaimsAsync(role));
+                }
+            }
 
-            var role = await roleManager.FindByNameAsync(userRole);
-            var roleClaims = role is not null ? await roleManager.GetClaimsAsync(role) : [];
-
-            var token = GenerateJwtToken(user, authOptions.Value, userRole, roleClaims);
+            var token = GenerateJwtToken(user, authOptions.Value, userRoles, roleClaims);
             var refreshToken = await GenerateRefreshTokenAsync(token, user, existingRefreshToken);
 
             return (token, refreshToken);
@@ -142,7 +149,7 @@ namespace SettleMate.Features.Users.Login
 
         private static string GenerateJwtToken(User user,
             AuthConfiguration authConfiguration,
-            string userRole,
+            IList<string> userRoles,
             IList<Claim> roleClaims)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authConfiguration.Key));
@@ -152,11 +159,16 @@ namespace SettleMate.Features.Users.Login
             List<Claim> claims = [
                 new(JwtRegisteredClaimNames.Sub, user.Email!),
             new("userid", user.Id),
-            new("role", userRole),
             new(JwtRegisteredClaimNames.Jti, tokenId)
             ];
 
-            foreach (var roleClaim in roleClaims)
+            claims.AddRange(userRoles.Select(role => new Claim(ClaimTypes.Role, role)));
+            foreach (var roleClaim in roleClaims.Where(claim => claim.Type == CustomClaimTypes.Permission))
+            {
+                claims.Add(new Claim(CustomClaimTypes.Permission, roleClaim.Value));
+            }
+
+            foreach (var roleClaim in roleClaims.Where(claim => claim.Type != CustomClaimTypes.Permission))
             {
                 claims.Add(new Claim(roleClaim.Type, roleClaim.Value));
             }
@@ -196,4 +208,3 @@ namespace SettleMate.Features.Users.Login
 
     }
 }
-
