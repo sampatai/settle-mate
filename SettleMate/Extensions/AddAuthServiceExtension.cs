@@ -21,6 +21,7 @@ namespace SettleMate.Extensions
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = configuration["AuthConfiguration:Issuer"],
                 ValidAudience = configuration["AuthConfiguration:Audience"],
+                RoleClaimType = System.Security.Claims.ClaimTypes.Role,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["AuthConfiguration:Key"]!))
             };
 
