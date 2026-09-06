@@ -21,7 +21,7 @@ public class ApplicationDbContext(
 
         modelBuilder.HasDefaultSchema(DatabaseConsts.Schema);
 
-        
+
 
         modelBuilder.Entity<User>(b =>
         {
@@ -72,9 +72,9 @@ public class ApplicationDbContext(
             b.HasKey(x => new { x.UserId, x.RoleId });
         });
     }
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
-    {
-        return await base.SaveChangesAsync(cancellationToken);
-    }
+    // public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
+    // {
+    //     return await base.SaveChangesAsync(cancellationToken);
+    // }
 }
 

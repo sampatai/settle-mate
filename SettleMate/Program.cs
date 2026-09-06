@@ -5,6 +5,7 @@ using SettleMate.Database;
 using SettleMate.Database.Entities.Identity;
 using SettleMate.Exceptions;
 using SettleMate.Extensions;
+using SettleMate.Middlewares;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,6 +52,8 @@ app.MapScalarApiReference(options =>
 });
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<CheckRevocatedTokensMiddleware>();
+
 app.MapCarter();
 
 app.UseHttpsRedirection();

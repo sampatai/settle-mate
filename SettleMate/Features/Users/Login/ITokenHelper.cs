@@ -10,6 +10,9 @@ using SettleMate.Features.Users.Shared;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Caching.Memory;
+using SettleMate.Models;
 
 namespace SettleMate.Features.Users.Login
 {
@@ -23,11 +26,14 @@ namespace SettleMate.Features.Users.Login
             UserManager<User> userManager,
             SignInManager<User> signInManager,
     TokenValidationParameters tokenValidationParameters,
-            IOptions<AuthConfiguration> authOptions) : ITokenHelper
+       IMemoryCache memoryCache,
+
+    IOptions<AuthConfiguration> authOptions) : ITokenHelper
     {
+        private const string ErrorInvalidCredentials = "invalid_credentials";
         private const string ErrorUserNotFound = "user_not_found";
         private const string ErrorInvalidToken = "invalid_token";
-        private const string ErrorInvalidCredentials = "invalid_credentials";
+        private const string ErrorInvalidInput = "invalid_input";
 
         public async Task<Result<LoginResponse>> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
         {
@@ -127,10 +133,10 @@ namespace SettleMate.Features.Users.Login
 
             if (!string.IsNullOrEmpty(existingRefreshToken))
             {
-                var existingToken = await dbContext.Set<RefreshToken>().FirstOrDefaultAsync(x => x.Token == existingRefreshToken);
+                var existingToken = await dbContext.RefreshTokens.FirstOrDefaultAsync(x => x.Token == existingRefreshToken);
                 if (existingToken != null)
                 {
-                    dbContext.Set<RefreshToken>().Remove(existingToken);
+                    dbContext.RefreshTokens.Remove(existingToken);
                 }
             }
 
@@ -194,6 +200,67 @@ namespace SettleMate.Features.Users.Login
                && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
 
 
+
+        /// <summary>
+        /// Updates a user's role and invalidates their refresh tokens
+        /// </summary>
+        /// <param name="userId">The ID of the user to update</param>
+        /// <param name="newRole">The new role to assign to the user</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>A result containing success or failure information</returns>
+        public async Task<Result<string>> UpdateUserRoleAsync(string userId, string newRole, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(newRole))
+            {
+                return Result<string>.Failure(ErrorInvalidInput, "Role cannot be empty");
+            }
+
+            // Verify the role exists
+            var role = await roleManager.FindByNameAsync(newRole);
+            if (role == null)
+            {
+                return Result<string>.Failure(ErrorInvalidInput, $"Role '{newRole}' does not exist");
+            }
+
+            // Find the user
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Result<string>.Failure(ErrorUserNotFound, $"User with ID '{userId}' not found");
+            }
+
+            // Get current roles and remove them
+            var currentRoles = await userManager.GetRolesAsync(user);
+            if (currentRoles.Any())
+            {
+                await userManager.RemoveFromRolesAsync(user, currentRoles);
+            }
+
+            // Add the new role
+            var addRoleResult = await userManager.AddToRoleAsync(user, newRole);
+            if (!addRoleResult.Succeeded)
+            {
+                var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
+                return Result<string>.Failure(ErrorInvalidInput, $"Failed to add role: {errors}");
+            }
+
+            // Invalidate all refresh tokens for this user
+            var refreshTokens = await dbContext.RefreshTokens
+                .Where(rt => rt.UserId == userId && !rt.Invalidated)
+                .ToListAsync(cancellationToken);
+
+            foreach (var refreshToken in refreshTokens)
+            {
+                refreshToken.Invalidated = true;
+
+                // Add to memory cache for the middleware to check
+                memoryCache.Set(refreshToken.JwtId, RevocatedTokenType.RoleChanged);
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return Result<string>.Success($"User role updated to {newRole}");
+        }
     }
 }
 
