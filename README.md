@@ -804,3 +804,39 @@ MIT License - Use freely and commercially.
 ---
 
 **Built with .NET 10 | Vertical Slice Architecture | CQRS Pattern**
+## Onboarding and personalized settlement roadmap
+
+The onboarding flow collects country of origin, Australian visa subclass, state or
+territory, optional university or employer, arrival date, budget range and career
+goal. `POST /onboarding/preview` generates an anonymous, non-persisted preview;
+authenticated users save the profile with `POST /onboarding/profile` and can
+retrieve it with `GET /onboarding/profile`.
+
+Visa rules are curated reference data rather than generated advice. They drive
+the roadmap's work-condition and TFN tasks: subclass 500 is seeded with the
+48-hour-per-fortnight student cap, subclass 600 with no work entitlement, and
+subclasses with no recorded fortnightly cap are explicitly marked for
+confirmation against current Department of Home Affairs conditions. Required
+documents are returned with the profile.
+
+Profiles are versioned. Saving a changed visa or state creates a new profile and
+roadmap while carrying completed items forward by their stable checklist-task
+key. Each roadmap item returns both the checklist task key and its task ID;
+`PATCH /onboarding/roadmap/items/{itemId}` or
+`PATCH /checklist/tasks/{taskId}` updates the linked records in both directions without
+allowing access to another user's roadmap. Preview data should be kept in the
+client's local storage until the user chooses to sign up; persisted profile and
+roadmap records are scoped by the authenticated user.
+
+For subclass 500, the profile also records whether the person is the primary
+student or a dependent, the study level, and whether the course has started.
+The curated rule engine applies 48 hours per fortnight to the primary student
+while the course is in session, 48 hours per fortnight to a dependent of a
+bachelor student, and unlimited hours to a dependent of a master's coursework,
+master's research, or doctoral student after the course starts. Before the
+course starts, the generated advice says not to work. Individual grant
+conditions must still be checked in VEVO. These conditions are based on the
+Department of Home Affairs student visa guidance:
+https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500
+and the conditions list:
+https://immi.homeaffairs.gov.au/visas/already-have-a-visa/check-visa-details-and-conditions/conditions-list

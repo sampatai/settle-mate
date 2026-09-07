@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SettleMate.Database.Entities.Identity;
+using SettleMate.Database.Entities.Onboarding;
 using SettleMate.Features.Users.Login;
 using System.Data;
 
@@ -14,6 +15,12 @@ public class ApplicationDbContext(
         (options)
 {
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    public DbSet<UserProfile> UserProfiles { get; set; } = null!;
+    public DbSet<VisaRule> VisaRules { get; set; } = null!;
+    public DbSet<ChecklistTemplate> ChecklistTemplates { get; set; } = null!;
+    public DbSet<Roadmap> Roadmaps { get; set; } = null!;
+    public DbSet<RoadmapItem> RoadmapItems { get; set; } = null!;
+    public DbSet<ChecklistTask> ChecklistTasks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,10 +78,70 @@ public class ApplicationDbContext(
         {
             b.HasKey(x => new { x.UserId, x.RoleId });
         });
+
+        modelBuilder.Entity<UserProfile>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.UserId, x.Version }).IsUnique();
+            b.Property(x => x.Country).HasMaxLength(100).IsRequired();
+            b.Property(x => x.VisaSubclass).HasMaxLength(20).IsRequired();
+            b.Property(x => x.ApplicantType).HasMaxLength(20).IsRequired();
+            b.Property(x => x.StudyLevel).HasMaxLength(30).IsRequired();
+            b.Property(x => x.State).HasMaxLength(3).IsRequired();
+            b.Property(x => x.BudgetRange).HasMaxLength(50).IsRequired();
+            b.Property(x => x.CareerGoal).HasMaxLength(100).IsRequired();
+        });
+
+        modelBuilder.Entity<VisaRule>(b =>
+        {
+            b.HasKey(x => x.VisaSubclass);
+            b.Property(x => x.VisaSubclass).HasMaxLength(20);
+            b.Property(x => x.RequiredDocumentsJson).IsRequired();
+        });
+
+        modelBuilder.Entity<ChecklistTemplate>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.Key).IsUnique();
+            b.Property(x => x.Key).HasMaxLength(100).IsRequired();
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Description).HasMaxLength(1000).IsRequired();
+            b.Property(x => x.Provider).HasMaxLength(200);
+            b.Property(x => x.ApplicationUrl).HasMaxLength(500);
+            b.Property(x => x.EligibilityNotes).HasMaxLength(1000);
+            b.Property(x => x.RequiredDocumentsJson).IsRequired();
+        });
+
+        modelBuilder.Entity<Roadmap>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.UserId, x.UserProfileId }).IsUnique();
+            b.HasMany(x => x.Items).WithOne(x => x.Roadmap)
+                .HasForeignKey(x => x.RoadmapId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RoadmapItem>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Description).HasMaxLength(2000).IsRequired();
+            b.Property(x => x.LinkedChecklistTaskId).HasMaxLength(100).IsRequired();
+            b.HasOne(x => x.ChecklistTask)
+                .WithMany(x => x.RoadmapItems)
+                .HasForeignKey(x => x.ChecklistTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ChecklistTask>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.UserId, x.Key }).IsUnique();
+            b.Property(x => x.UserId).HasMaxLength(450).IsRequired();
+            b.Property(x => x.Key).HasMaxLength(100).IsRequired();
+        });
     }
     // public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     // {
     //     return await base.SaveChangesAsync(cancellationToken);
     // }
 }
-

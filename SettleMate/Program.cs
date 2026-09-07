@@ -9,6 +9,10 @@ using SettleMate.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SettleMate.Middlewares;
+using FluentValidation;
+using SettleMate.Features.Onboarding.Shared;
+using SettleMate.Abstractions;
+using SettleMate.Security;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +28,9 @@ builder.Services.Replace(
 
 
 builder.Services.AddHealthChecksConfiguration();
-//builder.Services.AddValidatorsFromAssembly(typeof(CreateBookValidator).Assembly);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddValidatorsFromAssemblyContaining<OnboardingProfileValidator>();
 builder.Services.AddHandlersFromAssembly(typeof(Program).Assembly);
 builder.Services.AddExceptionHandler<CustomExceptionHandler>().AddProblemDetails();
 builder.Services.AddCarter();
