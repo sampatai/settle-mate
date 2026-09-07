@@ -32,18 +32,7 @@ public sealed class UpdateUserHandler(UserManager<User> userManager)
             return Result<UserResponse>.Failure(UserErrors.FromIdentityErrors(updateResult.Errors));
         }
 
-        if (!string.IsNullOrWhiteSpace(command.Request.Password))
-        {
-            var token = await userManager.GeneratePasswordResetTokenAsync(user);
-            var passwordResult = await userManager.ResetPasswordAsync(
-                user,
-                token,
-                command.Request.Password);
-            if (!passwordResult.Succeeded)
-            {
-                return Result<UserResponse>.Failure(UserErrors.FromIdentityErrors(passwordResult.Errors));
-            }
-        }
+        
 
         var roles = await userManager.GetRolesAsync(user);
         return Result<UserResponse>.Success(UserResponse.FromUser(user, roles));

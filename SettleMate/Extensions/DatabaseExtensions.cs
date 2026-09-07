@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SettleMate.Database;
+using SettleMate.Database.Entities.Identity;
 
 namespace SettleMate.Extensions
 {
@@ -23,7 +25,18 @@ namespace SettleMate.Extensions
                     })
                     .AddInterceptors(interceptor);
             });
-
+            services
+                .AddIdentity<User, Role>(options =>
+                {
+                    options.Password.RequireDigit = true;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequireNonAlphanumeric = true;
+                    options.Password.RequiredLength = 8;
+                })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddSignInManager()
+                .AddDefaultTokenProviders();
             return services;
         }
     }
