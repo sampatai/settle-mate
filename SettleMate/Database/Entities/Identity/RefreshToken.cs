@@ -5,6 +5,7 @@ namespace SettleMate.Features.Users.Login;
 
 public class RefreshToken : AuditableEntity
 {
+    public Guid Id { get; set; }
     public RefreshToken()
     {
 			
