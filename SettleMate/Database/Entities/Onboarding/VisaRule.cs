@@ -13,6 +13,24 @@ public sealed class VisaRule
     public bool BlueCardRequiredForChildRelatedWork { get; internal set; }
     public string RequiredDocumentsJson { get; internal set; } = "[]";
 
+    public void Update(
+        int? workHourLimitPerFortnight,
+        int? dependentBachelorWorkHourLimitPerFortnight,
+        int? dependentPostgraduateWorkHourLimitPerFortnight,
+        bool tfnEligible,
+        bool ndisEligible,
+        bool blueCardRequiredForChildRelatedWork,
+        string requiredDocumentsJson)
+    {
+        WorkHourLimitPerFortnight = workHourLimitPerFortnight;
+        DependentBachelorWorkHourLimitPerFortnight = dependentBachelorWorkHourLimitPerFortnight;
+        DependentPostgraduateWorkHourLimitPerFortnight = dependentPostgraduateWorkHourLimitPerFortnight;
+        TfnEligible = tfnEligible;
+        NdisEligible = ndisEligible;
+        BlueCardRequiredForChildRelatedWork = blueCardRequiredForChildRelatedWork;
+        RequiredDocumentsJson = requiredDocumentsJson;
+    }
+
     public int? GetWorkHourLimit(UserProfile profile) =>
         VisaSubclass != "500" ? WorkHourLimitPerFortnight :
         !profile.CourseStarted ? 0 :

@@ -23,6 +23,225 @@ namespace SettleMate.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.Listing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateOnly>("AvailableFrom")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ProviderId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("RoomCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RoomType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SourceUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Suburb")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("WeeklyRent")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderId");
+
+                    b.HasIndex("IsActive", "Status", "Suburb", "AvailableFrom");
+
+                    b.ToTable("Listings", "dbo");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.ListingAmenity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ListingAmenities", "dbo");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.ListingScore", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CalculatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DestinationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("NearbySupermarketCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NearbyTransportCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("SafetyScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal>("StudentScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("TravelTimeMinutes")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId", "DestinationId")
+                        .IsUnique()
+                        .HasFilter("[DestinationId] IS NOT NULL");
+
+                    b.ToTable("ListingScores", "dbo");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.ListingWeeklyCost", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<bool>("Included")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId", "Type")
+                        .IsUnique();
+
+                    b.ToTable("ListingWeeklyCosts", "dbo");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.SavedListing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SavedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.HasIndex("UserId", "ListingId")
+                        .IsUnique();
+
+                    b.ToTable("SavedListings", "dbo");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.UserDestination", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserDestinations", "dbo");
+                });
+
             modelBuilder.Entity("SettleMate.Database.Entities.Identity.Role", b =>
                 {
                     b.Property<string>("Id")
@@ -47,7 +266,7 @@ namespace SettleMate.Migrations
                         .HasDatabaseName("RoleNameIndex")
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
-                    b.ToTable("roles", "auth");
+                    b.ToTable("Roles", "auth");
                 });
 
             modelBuilder.Entity("SettleMate.Database.Entities.Identity.RoleClaim", b =>
@@ -244,6 +463,9 @@ namespace SettleMate.Migrations
                     b.Property<bool>("Completed")
                         .HasColumnType("bit");
 
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -259,7 +481,7 @@ namespace SettleMate.Migrations
                     b.HasIndex("UserId", "Key")
                         .IsUnique();
 
-                    b.ToTable("ChecklistTasks", "auth");
+                    b.ToTable("ChecklistTasks", "dbo");
                 });
 
             modelBuilder.Entity("SettleMate.Database.Entities.Onboarding.ChecklistTemplate", b =>
@@ -283,6 +505,12 @@ namespace SettleMate.Migrations
                     b.Property<string>("EligibilityNotes")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("EstimatedMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsTimeSensitive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Key")
                         .IsRequired()
@@ -316,7 +544,7 @@ namespace SettleMate.Migrations
                     b.HasIndex("Key")
                         .IsUnique();
 
-                    b.ToTable("ChecklistTemplates", "auth");
+                    b.ToTable("ChecklistTemplates", "dbo");
                 });
 
             modelBuilder.Entity("SettleMate.Database.Entities.Onboarding.Roadmap", b =>
@@ -343,7 +571,7 @@ namespace SettleMate.Migrations
                     b.HasIndex("UserId", "UserProfileId")
                         .IsUnique();
 
-                    b.ToTable("Roadmaps", "auth");
+                    b.ToTable("Roadmaps", "dbo");
                 });
 
             modelBuilder.Entity("SettleMate.Database.Entities.Onboarding.RoadmapItem", b =>
@@ -385,7 +613,7 @@ namespace SettleMate.Migrations
 
                     b.HasIndex("RoadmapId");
 
-                    b.ToTable("RoadmapItems", "auth");
+                    b.ToTable("RoadmapItems", "dbo");
                 });
 
             modelBuilder.Entity("SettleMate.Database.Entities.Onboarding.UserProfile", b =>
@@ -456,7 +684,7 @@ namespace SettleMate.Migrations
                     b.HasIndex("UserId", "Version")
                         .IsUnique();
 
-                    b.ToTable("UserProfiles", "auth");
+                    b.ToTable("UserProfiles", "dbo");
                 });
 
             modelBuilder.Entity("SettleMate.Database.Entities.Onboarding.VisaRule", b =>
@@ -489,7 +717,7 @@ namespace SettleMate.Migrations
 
                     b.HasKey("VisaSubclass");
 
-                    b.ToTable("VisaRules", "auth");
+                    b.ToTable("VisaRules", "dbo");
                 });
 
             modelBuilder.Entity("SettleMate.Features.Users.Login.RefreshToken", b =>
@@ -527,6 +755,50 @@ namespace SettleMate.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens", "auth");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.ListingAmenity", b =>
+                {
+                    b.HasOne("SettleMate.Database.Entities.Accommodation.Listing", "Listing")
+                        .WithMany("Amenities")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.ListingScore", b =>
+                {
+                    b.HasOne("SettleMate.Database.Entities.Accommodation.Listing", "Listing")
+                        .WithMany("Scores")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.ListingWeeklyCost", b =>
+                {
+                    b.HasOne("SettleMate.Database.Entities.Accommodation.Listing", "Listing")
+                        .WithMany("WeeklyCosts")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.SavedListing", b =>
+                {
+                    b.HasOne("SettleMate.Database.Entities.Accommodation.Listing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
                 });
 
             modelBuilder.Entity("SettleMate.Database.Entities.Identity.RoleClaim", b =>
@@ -620,6 +892,15 @@ namespace SettleMate.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SettleMate.Database.Entities.Accommodation.Listing", b =>
+                {
+                    b.Navigation("Amenities");
+
+                    b.Navigation("Scores");
+
+                    b.Navigation("WeeklyCosts");
                 });
 
             modelBuilder.Entity("SettleMate.Database.Entities.Identity.Role", b =>

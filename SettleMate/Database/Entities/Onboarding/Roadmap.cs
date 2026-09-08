@@ -6,7 +6,7 @@ public sealed class Roadmap : AuditableEntity
 {
     private Roadmap() { }
 
-    private Roadmap(Guid id, string userId, Guid userProfileId)
+    public Roadmap(Guid id, string userId, Guid userProfileId)
     {
         Id = id;
         UserId = userId;
@@ -18,8 +18,6 @@ public sealed class Roadmap : AuditableEntity
     public Guid UserProfileId { get; private set; }
     public ICollection<RoadmapItem> Items { get; private set; } = [];
 
-    public static Roadmap Create(string userId, Guid userProfileId) =>
-        new(Guid.NewGuid(), userId, userProfileId);
 
     public void AddItem(RoadmapItem item)
     {

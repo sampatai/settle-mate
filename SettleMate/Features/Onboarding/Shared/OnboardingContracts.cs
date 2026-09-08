@@ -33,7 +33,17 @@ public sealed record RoadmapItemResponse(
     string Description,
     Guid ChecklistTaskId,
     string LinkedChecklistTaskId,
-    bool Completed);
+    bool Completed,
+    IReadOnlyList<string> RequiredDocuments,
+    int EstimatedMinutes,
+    string? OfficialUrl,
+    bool IsTimeSensitive,
+    DateTimeOffset? CompletedAt);
+
+public sealed record OnboardingProgressResponse(
+    int Total,
+    int Completed,
+    decimal Percentage);
 
 public sealed record OnboardingResponse(
     Guid ProfileId,
@@ -46,4 +56,5 @@ public sealed record OnboardingResponse(
     string BudgetRange,
     string CareerGoal,
     VisaRuleResponse VisaRule,
-    IReadOnlyList<RoadmapItemResponse> Items);
+    IReadOnlyList<RoadmapItemResponse> Items,
+    OnboardingProgressResponse Progress);

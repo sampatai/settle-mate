@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="SettleMate.Tests/SettleMate.Tests.csproj" />
   <Project Path="SettleMate/SettleMate.csproj" />
 </Solution>
+
+  <Project Path="SettleMate.Tests/SettleMate.Tests.csproj" />

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SettleMate.Database.Entities.Identity;
 using SettleMate.Database.Entities.Onboarding;
+using SettleMate.Database.Entities.Accommodation;
 using SettleMate.Features.Users.Login;
 using System.Data;
 
@@ -21,10 +22,18 @@ public class ApplicationDbContext(
     public DbSet<Roadmap> Roadmaps { get; set; } = null!;
     public DbSet<RoadmapItem> RoadmapItems { get; set; } = null!;
     public DbSet<ChecklistTask> ChecklistTasks { get; set; } = null!;
+    public DbSet<Listing> Listings { get; set; } = null!;
+    public DbSet<ListingScore> ListingScores { get; set; } = null!;
+    public DbSet<SavedListing> SavedListings { get; set; } = null!;
+    public DbSet<UserDestination> UserDestinations { get; set; } = null!;
+    public DbSet<ListingAmenity> ListingAmenities { get; set; } = null!;
+    public DbSet<ListingWeeklyCost> ListingWeeklyCosts { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
         modelBuilder.HasDefaultSchema(DatabaseConsts.Schema);
 
@@ -59,7 +68,7 @@ public class ApplicationDbContext(
 
         modelBuilder.Entity<Role>(b =>
         {
-            b.ToTable("roles");
+            b.ToTable("Roles", DatabaseConsts.Schema);
 
             // Each Role can have many entries in the UserRole join table
             b.HasMany(e => e.UserRoles)
@@ -81,6 +90,7 @@ public class ApplicationDbContext(
 
         modelBuilder.Entity<UserProfile>(b =>
         {
+            b.ToTable("UserProfiles", "dbo");
             b.HasKey(x => x.Id);
             b.HasIndex(x => new { x.UserId, x.Version }).IsUnique();
             b.Property(x => x.Country).HasMaxLength(100).IsRequired();
@@ -94,6 +104,7 @@ public class ApplicationDbContext(
 
         modelBuilder.Entity<VisaRule>(b =>
         {
+            b.ToTable("VisaRules", "dbo");
             b.HasKey(x => x.VisaSubclass);
             b.Property(x => x.VisaSubclass).HasMaxLength(20);
             b.Property(x => x.RequiredDocumentsJson).IsRequired();
@@ -101,6 +112,7 @@ public class ApplicationDbContext(
 
         modelBuilder.Entity<ChecklistTemplate>(b =>
         {
+            b.ToTable("ChecklistTemplates", "dbo");
             b.HasKey(x => x.Id);
             b.HasIndex(x => x.Key).IsUnique();
             b.Property(x => x.Key).HasMaxLength(100).IsRequired();
@@ -109,11 +121,14 @@ public class ApplicationDbContext(
             b.Property(x => x.Provider).HasMaxLength(200);
             b.Property(x => x.ApplicationUrl).HasMaxLength(500);
             b.Property(x => x.EligibilityNotes).HasMaxLength(1000);
+            b.Property(x => x.EstimatedMinutes).IsRequired();
+            b.Property(x => x.IsTimeSensitive).IsRequired();
             b.Property(x => x.RequiredDocumentsJson).IsRequired();
         });
 
         modelBuilder.Entity<Roadmap>(b =>
         {
+            b.ToTable("Roadmaps", "dbo");
             b.HasKey(x => x.Id);
             b.HasIndex(x => new { x.UserId, x.UserProfileId }).IsUnique();
             b.HasMany(x => x.Items).WithOne(x => x.Roadmap)
@@ -122,6 +137,7 @@ public class ApplicationDbContext(
 
         modelBuilder.Entity<RoadmapItem>(b =>
         {
+            b.ToTable("RoadmapItems", "dbo");
             b.HasKey(x => x.Id);
             b.Property(x => x.Title).HasMaxLength(200).IsRequired();
             b.Property(x => x.Description).HasMaxLength(2000).IsRequired();
@@ -134,10 +150,12 @@ public class ApplicationDbContext(
 
         modelBuilder.Entity<ChecklistTask>(b =>
         {
+            b.ToTable("ChecklistTasks", "dbo");
             b.HasKey(x => x.Id);
             b.HasIndex(x => new { x.UserId, x.Key }).IsUnique();
             b.Property(x => x.UserId).HasMaxLength(450).IsRequired();
             b.Property(x => x.Key).HasMaxLength(100).IsRequired();
+            b.Property(x => x.CompletedAt);
         });
     }
     // public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())

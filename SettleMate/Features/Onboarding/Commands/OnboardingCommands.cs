@@ -11,7 +11,3 @@ public sealed record SetRoadmapItemCompletedCommand(
     Guid ItemId,
     bool Completed);
 
-public sealed record SetChecklistTaskCompletedCommand(
-    string UserId,
-    Guid TaskId,
-    bool Completed);

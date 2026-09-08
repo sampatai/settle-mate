@@ -19,7 +19,7 @@ public sealed class SaveOnboardingProfileHandler(
     {
         var validation = await validator.ValidateAsync(command.Request, cancellationToken);
         if (!validation.IsValid)
-            return validation.ToFailureResult<OnboardingResponse>("Onboarding");
+            throw new ValidationException(validation.Errors);
 
         var rule = await dbContext.VisaRules.AsNoTracking()
             .SingleOrDefaultAsync(x => x.VisaSubclass == command.Request.VisaSubclass.Trim(), cancellationToken);
@@ -35,12 +35,16 @@ public sealed class SaveOnboardingProfileHandler(
             .Select(x => x.Key)
             .ToListAsync(cancellationToken);
 
-        var profile = UserProfile.Create(command.UserId, (previousProfile?.Version ?? 0) + 1, command.Request);
+        var profile = new UserProfile(Guid.CreateVersion7(), command.UserId, (previousProfile?.Version ?? 0) + 1, command.Request);
         var roadmap = await BuildRoadmapAsync(command.UserId, profile, rule, completedKeys, cancellationToken);
         dbContext.UserProfiles.Add(profile);
         dbContext.Roadmaps.Add(roadmap);
         await dbContext.SaveChangesAsync(cancellationToken);
-        return Result<OnboardingResponse>.Success(OnboardingMapper.ToResponse(profile, rule, roadmap.Items));
+        var keys = roadmap.Items.Select(x => x.LinkedChecklistTaskId).ToArray();
+        var templates = await dbContext.ChecklistTemplates.AsNoTracking()
+            .Where(x => keys.Contains(x.Key))
+            .ToDictionaryAsync(x => x.Key, cancellationToken);
+        return Result<OnboardingResponse>.Success(OnboardingMapper.ToResponse(profile, rule, roadmap.Items, templates));
     }
 
     private async Task<Roadmap> BuildRoadmapAsync(
@@ -70,7 +74,7 @@ public sealed class SaveOnboardingProfileHandler(
             .Concat(rule.BlueCardRequiredForChildRelatedWork ? [$"visa:{rule.VisaSubclass}:blue-card"] : [])
             .Distinct().ToArray();
         var tasks = await EnsureChecklistTasksAsync(userId, keys, completedKeys, cancellationToken);
-        var roadmap = Roadmap.Create(profile.UserId, profile.Id);
+        var roadmap = new Roadmap(Guid.CreateVersion7(), profile.UserId, profile.Id);
         foreach (var definition in definitions)
             roadmap.AddItem(CreateItem(definition.WeekNumber, definition.Title, definition.Description, tasks[definition.Key]));
 
@@ -112,7 +116,7 @@ public sealed class SaveOnboardingProfileHandler(
     }
 
     private static RoadmapItem CreateItem(int week, string title, string description, ChecklistTask task) =>
-        RoadmapItem.Create(week, title, description, task);
+       new RoadmapItem(Guid.CreateVersion7(), week, title, description, task);
 
     private static string WorkDescription(UserProfile profile, VisaRule rule)
     {
@@ -123,41 +127,51 @@ public sealed class SaveOnboardingProfileHandler(
                 ? "Your curated rule records unlimited work after the course starts. Confirm conditions in VEVO."
                 : $"Keep work within {limit} hours per fortnight and confirm conditions in VEVO.";
     }
-
 }
 
-public sealed class SetRoadmapItemCompletedHandler(ApplicationDbContext dbContext)
-    : IHandler<SetRoadmapItemCompletedCommand, Result<bool>>
+public sealed class OnboardingProfileValidator : AbstractValidator<OnboardingProfileRequest>
 {
-    public async Task<Result<bool>> HandleAsync(
-        SetRoadmapItemCompletedCommand command,
-        CancellationToken cancellationToken)
-    {
-        var item = await dbContext.RoadmapItems
-            .Include(x => x.ChecklistTask)
-            .SingleOrDefaultAsync(x => x.Id == command.ItemId && x.Roadmap.UserId == command.UserId, cancellationToken);
-        if (item is null)
-            return Result<bool>.Failure([OnboardingErrors.RoadmapItemNotFound]);
-        item.SetCompleted(command.Completed);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return Result<bool>.Success(true);
-    }
-}
+    private static readonly string[] AustralianStates =
+        ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"];
+    private static readonly string[] CareerCategories =
+        ["Aged Care", "Hospitality", "IT", "Child Care", "Construction"];
 
-public sealed class SetChecklistTaskCompletedHandler(ApplicationDbContext dbContext)
-    : IHandler<SetChecklistTaskCompletedCommand, Result<bool>>
-{
-    public async Task<Result<bool>> HandleAsync(
-        SetChecklistTaskCompletedCommand command,
-        CancellationToken cancellationToken)
+    public OnboardingProfileValidator()
     {
-        var task = await dbContext.ChecklistTasks
-            .Include(x => x.RoadmapItems)
-            .SingleOrDefaultAsync(x => x.Id == command.TaskId && x.UserId == command.UserId, cancellationToken);
-        if (task is null)
-            return Result<bool>.Failure([OnboardingErrors.RoadmapItemNotFound]);
-        task.SetCompleted(command.Completed);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return Result<bool>.Success(true);
+        RuleFor(c => c.Country)
+            .NotEmpty().WithMessage("Country of origin is required")
+            .MaximumLength(100).WithMessage("Country of origin must not exceed 100 characters");
+        RuleFor(c => c.VisaSubclass)
+            .NotEmpty().WithMessage("Visa subclass is required")
+            .MaximumLength(20).WithMessage("Visa subclass must not exceed 20 characters");
+        RuleFor(c => c.ApplicantType)
+            .NotEmpty().WithMessage("Applicant type is required")
+            .Must(value => value is "Primary" or "Dependent")
+            .WithMessage("Applicant type must be Primary or Dependent");
+        RuleFor(c => c.StudyLevel)
+            .NotEmpty().WithMessage("Study level is required")
+            .Must(value => value is "NotStudying" or "Bachelor" or "MastersCoursework" or "MastersResearch" or "Doctoral")
+            .WithMessage("Study level must be NotStudying, Bachelor, MastersCoursework, MastersResearch or Doctoral");
+        RuleFor(c => c.StudyLevel)
+            .NotEqual("NotStudying").When(c => c.ApplicantType == "Dependent")
+            .WithMessage("A dependent of a student must provide the primary student's study level");
+        RuleFor(c => c.State)
+            .NotEmpty().WithMessage("Australian state or territory is required")
+            .Must(state => AustralianStates.Contains(state, StringComparer.OrdinalIgnoreCase))
+            .WithMessage("State must be a valid Australian state or territory code");
+        RuleFor(c => c.ArrivalDate)
+            .NotEmpty().WithMessage("Arrival date is required")
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)))
+            .WithMessage("Arrival date cannot be in the future");
+        RuleFor(c => c.BudgetRange)
+            .NotEmpty().WithMessage("Budget range is required")
+            .MaximumLength(50).WithMessage("Budget range must not exceed 50 characters");
+        RuleFor(c => c.CareerGoal)
+            .NotEmpty().WithMessage("Career goal is required")
+            .MaximumLength(100).WithMessage("Career goal must not exceed 100 characters")
+            .Must(goal => CareerCategories.Contains(goal, StringComparer.OrdinalIgnoreCase))
+            .WithMessage("Career goal must be Aged Care, Hospitality, IT, Child Care or Construction");
+        RuleFor(c => c.UniversityOrEmployer)
+            .MaximumLength(200).WithMessage("University or employer must not exceed 200 characters");
     }
 }

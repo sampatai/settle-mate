@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SettleMate.Middlewares;
 using FluentValidation;
 using SettleMate.Features.Onboarding.Shared;
+using SettleMate.Features.Onboarding.Commands;
 using SettleMate.Abstractions;
 using SettleMate.Security;
 
@@ -36,7 +37,7 @@ builder.Services.AddExceptionHandler<CustomExceptionHandler>().AddProblemDetails
 builder.Services.AddCarter();
 var app = builder.Build();
 
-
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
@@ -55,7 +56,6 @@ app.UseMiddleware<CheckRevocatedTokensMiddleware>();
 app.MapCarter();
 
 app.UseHttpsRedirection();
-app.UseExceptionHandler();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -67,3 +67,5 @@ using (var scope = app.Services.CreateScope())
 
 
 await app.RunAsync();
+
+public partial class Program;

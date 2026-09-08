@@ -854,8 +854,11 @@ MIT License - Use freely and commercially.
 The onboarding flow collects country of origin, Australian visa subclass, state or
 territory, optional university or employer, arrival date, budget range and career
 goal. `POST /onboarding/preview` generates an anonymous, non-persisted preview;
-authenticated users save the profile with `POST /onboarding/profile` and can
-retrieve it with `GET /onboarding/profile`.
+authenticated users start onboarding with `POST /onboarding/start`, create or
+update the profile with `PUT /onboarding/profile`. The roadmap can be retrieved with
+`GET /onboarding/roadmap/{userId}` and regenerated with
+`POST /onboarding/roadmap/{userId}/regenerate`; these route parameters must match
+the authenticated user.
 
 Visa rules are curated reference data rather than generated advice. They drive
 the roadmap's work-condition and TFN tasks: subclass 500 is seeded with the
