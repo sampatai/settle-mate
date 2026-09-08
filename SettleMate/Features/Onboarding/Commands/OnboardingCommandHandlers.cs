@@ -19,7 +19,7 @@ public sealed class SaveOnboardingProfileHandler(
     {
         var validation = await validator.ValidateAsync(command.Request, cancellationToken);
         if (!validation.IsValid)
-            return validation.ToFailureResult<OnboardingResponse>("Onboarding");
+            throw new ValidationException(validation.Errors);
 
         var rule = await dbContext.VisaRules.AsNoTracking()
             .SingleOrDefaultAsync(x => x.VisaSubclass == command.Request.VisaSubclass.Trim(), cancellationToken);
@@ -35,7 +35,7 @@ public sealed class SaveOnboardingProfileHandler(
             .Select(x => x.Key)
             .ToListAsync(cancellationToken);
 
-        var profile = UserProfile.Create(command.UserId, (previousProfile?.Version ?? 0) + 1, command.Request);
+        var profile = new UserProfile(Guid.CreateVersion7(), command.UserId, (previousProfile?.Version ?? 0) + 1, command.Request);
         var roadmap = await BuildRoadmapAsync(command.UserId, profile, rule, completedKeys, cancellationToken);
         dbContext.UserProfiles.Add(profile);
         dbContext.Roadmaps.Add(roadmap);
@@ -70,7 +70,7 @@ public sealed class SaveOnboardingProfileHandler(
             .Concat(rule.BlueCardRequiredForChildRelatedWork ? [$"visa:{rule.VisaSubclass}:blue-card"] : [])
             .Distinct().ToArray();
         var tasks = await EnsureChecklistTasksAsync(userId, keys, completedKeys, cancellationToken);
-        var roadmap = Roadmap.Create(profile.UserId, profile.Id);
+        var roadmap = new Roadmap(Guid.CreateVersion7(), profile.UserId, profile.Id);
         foreach (var definition in definitions)
             roadmap.AddItem(CreateItem(definition.WeekNumber, definition.Title, definition.Description, tasks[definition.Key]));
 
@@ -112,7 +112,7 @@ public sealed class SaveOnboardingProfileHandler(
     }
 
     private static RoadmapItem CreateItem(int week, string title, string description, ChecklistTask task) =>
-        RoadmapItem.Create(week, title, description, task);
+       new RoadmapItem(Guid.CreateVersion7(), week, title, description, task);
 
     private static string WorkDescription(UserProfile profile, VisaRule rule)
     {

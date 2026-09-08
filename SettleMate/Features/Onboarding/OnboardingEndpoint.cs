@@ -6,6 +6,8 @@ using SettleMate.Abstractions.Errors;
 using SettleMate.Features.Onboarding.Shared;
 using SettleMate.Features.Onboarding.Commands;
 using SettleMate.Features.Onboarding.Queries;
+using SettleMate.Extensions;
+using SettleMate.Constants;
 
 namespace SettleMate.Features.Onboarding;
 
@@ -14,31 +16,49 @@ public sealed class OnboardingEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("/onboarding/preview", Preview)
-            .WithTags("Onboarding")
+            .WithTags(ApiTags.Onboarding)
             .AllowAnonymous()
             .Produces<OnboardingResponse>(StatusCodes.Status200OK)
             .ProducesValidationProblem();
 
-        app.MapPost("/onboarding/profile", SaveProfile)
-            .WithTags("Onboarding")
+        app.MapPost("/onboarding/start", SaveProfile)
+            .WithTags(ApiTags.Onboarding)
+            .WithName("StartOnboarding")
             .RequireAuthorization()
             .Produces<OnboardingResponse>(StatusCodes.Status200OK)
             .ProducesValidationProblem();
 
-        app.MapGet("/onboarding/profile", GetProfile)
-            .WithTags("Onboarding")
+        app.MapPut("/onboarding/profile", SaveProfile)
+            .WithTags(ApiTags.Onboarding)
+            .WithName("UpdateProfile")
             .RequireAuthorization()
             .Produces<OnboardingResponse>(StatusCodes.Status200OK)
+            .ProducesValidationProblem();
+
+        app.MapGet("/onboarding/roadmap/{userId}", GetRoadmap)
+            .WithTags(ApiTags.Roadmap)
+            .WithName("GetRoadmap")
+            .RequireAuthorization()
+            .Produces<OnboardingResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
+        app.MapPost("/onboarding/roadmap/{userId}/regenerate", RegenerateRoadmap)
+            .WithTags(ApiTags.Roadmap)
+            .WithName("RegenerateRoadmap")
+            .RequireAuthorization()
+            .Produces<OnboardingResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
+
         app.MapPatch("/onboarding/roadmap/items/{itemId:guid}", SetItemCompleted)
-            .WithTags("Onboarding")
+            .WithTags(ApiTags.Onboarding)
             .RequireAuthorization()
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapPatch("/checklist/tasks/{taskId:guid}", SetChecklistTaskCompleted)
-            .WithTags("Checklist")
+            .WithTags(ApiTags.Checklist)
             .RequireAuthorization()
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
@@ -49,9 +69,9 @@ public sealed class OnboardingEndpoint : ICarterModule
         IHandler<PreviewOnboardingQuery, Result<OnboardingResponse>> handler,
         CancellationToken cancellationToken)
     {
-        return ToResult(await handler.HandleAsync(
+        return (await handler.HandleAsync(
             new PreviewOnboardingQuery(request),
-            cancellationToken));
+            cancellationToken)).ToHttpResult();
     }
 
     private async Task<IResult> SaveProfile(
@@ -63,22 +83,42 @@ public sealed class OnboardingEndpoint : ICarterModule
         var userId = currentUser.UserId;
         return userId is null
             ? Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Authentication required.")
-            : ToResult(await handler.HandleAsync(
+            : (await handler.HandleAsync(
                 new SaveOnboardingProfileCommand(userId, request),
-                cancellationToken));
+                cancellationToken)).ToHttpResult();
     }
 
-    private async Task<IResult> GetProfile(
+    private async Task<IResult> GetRoadmap(
+        string userId,
         ICurrentUser currentUser,
         IHandler<GetOnboardingProfileQuery, Result<OnboardingResponse>> handler,
         CancellationToken cancellationToken)
     {
-        var userId = currentUser.UserId;
-        return userId is null
-            ? Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Authentication required.")
-            : ToResult(await handler.HandleAsync(
-                new GetOnboardingProfileQuery(userId),
-                cancellationToken));
+        if (currentUser.UserId is null)
+            return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Authentication required.");
+        if (!string.Equals(currentUser.UserId, userId, StringComparison.Ordinal))
+            return Results.Problem(statusCode: StatusCodes.Status403Forbidden, title: "You cannot access another user's roadmap.");
+
+        return (await handler.HandleAsync(
+            new GetOnboardingProfileQuery(currentUser.UserId),
+            cancellationToken)).ToHttpResult();
+    }
+
+    private async Task<IResult> RegenerateRoadmap(
+        string userId,
+        OnboardingProfileRequest request,
+        ICurrentUser currentUser,
+        IHandler<SaveOnboardingProfileCommand, Result<OnboardingResponse>> handler,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.UserId is null)
+            return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Authentication required.");
+        if (!string.Equals(currentUser.UserId, userId, StringComparison.Ordinal))
+            return Results.Problem(statusCode: StatusCodes.Status403Forbidden, title: "You cannot regenerate another user's roadmap.");
+
+        return (await handler.HandleAsync(
+            new SaveOnboardingProfileCommand(currentUser.UserId, request),
+            cancellationToken)).ToHttpResult();
     }
 
     private async Task<IResult> SetItemCompleted(
@@ -94,7 +134,7 @@ public sealed class OnboardingEndpoint : ICarterModule
         var result = await handler.HandleAsync(
             new SetRoadmapItemCompletedCommand(userId, itemId, request.Completed),
             cancellationToken);
-        return result.IsSuccess ? Results.NoContent() : ToResult(result);
+        return result.IsSuccess ? Results.NoContent() : result.ToHttpResult();
     }
 
     private async Task<IResult> SetChecklistTaskCompleted(
@@ -110,28 +150,7 @@ public sealed class OnboardingEndpoint : ICarterModule
         var result = await handler.HandleAsync(
             new SetChecklistTaskCompletedCommand(userId, taskId, request.Completed),
             cancellationToken);
-        return result.IsSuccess ? Results.NoContent() : ToResult(result);
+        return result.IsSuccess ? Results.NoContent() : result.ToHttpResult();
     }
 
-    private static IResult ToResult<T>(Result<T> result)
-    {
-        if (result.IsSuccess)
-            return Results.Ok(result.Data);
-        if (result.Errors?.FirstOrDefault() is ValidationError validationError)
-        {
-            var errors = validationError.Errors
-                .GroupBy(error => error.Code.Replace("Onboarding.", string.Empty))
-                .ToDictionary(group => group.Key, group => group.Select(error => error.Description ?? string.Empty).ToArray());
-            return Results.ValidationProblem(errors);
-        }
-        var error = result.Errors?.FirstOrDefault() ?? Error.Unexpected("Onboarding.Unknown", "The onboarding request failed.");
-        var status = error.Type switch
-        {
-            ErrorType.NotFound => StatusCodes.Status404NotFound,
-            ErrorType.Validation => StatusCodes.Status400BadRequest,
-            ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
-            _ => StatusCodes.Status400BadRequest
-        };
-        return Results.Problem(statusCode: status, title: error.Code, detail: error.Description);
-    }
 }

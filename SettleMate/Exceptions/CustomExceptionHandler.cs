@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
 
 namespace SettleMate.Exceptions
 {
@@ -7,6 +8,26 @@ namespace SettleMate.Exceptions
     {
         public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
+            if (exception is ValidationException validationException)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                var errors = validationException.Errors
+                    .GroupBy(error => error.PropertyName)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => group.Select(error => error.ErrorMessage).ToArray());
+                var validationProblem = new ValidationProblemDetails(errors)
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "One or more validation errors occurred",
+                    Type = nameof(ValidationException),
+                    Instance = context.Request.Path
+                };
+
+                await context.Response.WriteAsJsonAsync(validationProblem, cancellationToken);
+                return true;
+            }
+
             int statusCode = exception switch
             {
                 UnauthorizedAccessException => StatusCodes.Status401Unauthorized,

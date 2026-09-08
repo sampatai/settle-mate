@@ -4,12 +4,14 @@ namespace SettleMate.Features.Onboarding.Shared;
 
 public static class OnboardingErrors
 {
+    public const string CodePrefix = "Onboarding";
+
     public static Error VisaRuleNotFound(string visaSubclass) =>
-        Error.NotFound("Onboarding.VisaRuleNotFound", $"Visa subclass '{visaSubclass}' is not supported.");
+        Error.NotFound($"{CodePrefix}.VisaRuleNotFound", $"Visa subclass '{visaSubclass}' is not supported.");
 
     public static readonly Error ProfileNotFound =
-        Error.NotFound("Onboarding.ProfileNotFound", "An onboarding profile has not been created.");
+        Error.NotFound($"{CodePrefix}.ProfileNotFound", "An onboarding profile has not been created.");
 
     public static readonly Error RoadmapItemNotFound =
-        Error.NotFound("Onboarding.RoadmapItemNotFound", "The roadmap item was not found.");
+        Error.NotFound($"{CodePrefix}.RoadmapItemNotFound", "The roadmap item was not found.");
 }

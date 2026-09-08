@@ -36,7 +36,7 @@ builder.Services.AddExceptionHandler<CustomExceptionHandler>().AddProblemDetails
 builder.Services.AddCarter();
 var app = builder.Build();
 
-
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
@@ -55,7 +55,6 @@ app.UseMiddleware<CheckRevocatedTokensMiddleware>();
 app.MapCarter();
 
 app.UseHttpsRedirection();
-app.UseExceptionHandler();
 
 using (var scope = app.Services.CreateScope())
 {

@@ -5,9 +5,9 @@ namespace SettleMate.Database.Entities.Onboarding;
 
 public sealed class UserProfile : AuditableEntity
 {
-    private UserProfile() { }
+    protected UserProfile() { }
 
-    private UserProfile(Guid id, string userId, int version, OnboardingProfileRequest request)
+    public UserProfile(Guid id, string userId, int version, OnboardingProfileRequest request)
     {
         Id = id;
         UserId = userId;
@@ -40,6 +40,5 @@ public sealed class UserProfile : AuditableEntity
     public string BudgetRange { get; private set; } = null!;
     public string CareerGoal { get; private set; } = null!;
 
-    public static UserProfile Create(string userId, int version, OnboardingProfileRequest request) =>
-        new(Guid.NewGuid(), userId, version, request);
+
 }

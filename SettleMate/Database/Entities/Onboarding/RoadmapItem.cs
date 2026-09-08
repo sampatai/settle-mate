@@ -2,9 +2,9 @@ namespace SettleMate.Database.Entities.Onboarding;
 
 public sealed class RoadmapItem
 {
-    private RoadmapItem() { }
+    protected RoadmapItem() { }
 
-    private RoadmapItem(Guid id, int weekNumber, string title, string description, ChecklistTask checklistTask)
+    public RoadmapItem(Guid id, int weekNumber, string title, string description, ChecklistTask checklistTask)
     {
         Id = id;
         WeekNumber = weekNumber;
@@ -27,8 +27,6 @@ public sealed class RoadmapItem
     public ChecklistTask ChecklistTask { get; private set; } = null!;
     public bool Completed { get; private set; }
 
-    public static RoadmapItem Create(int weekNumber, string title, string description, ChecklistTask checklistTask) =>
-        new(Guid.NewGuid(), weekNumber, title, description, checklistTask);
 
     public void SetCompleted(bool completed)
     {
