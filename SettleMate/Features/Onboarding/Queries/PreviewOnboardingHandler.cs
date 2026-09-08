@@ -68,28 +68,7 @@ public sealed class PreviewOnboardingHandler(
             roadmap.AddItem(new RoadmapItem(Guid.CreateVersion7(), 3, "Check NDIS access",
                 "Review residency and disability eligibility before relying on NDIS support.",
                 ChecklistTask.Create(string.Empty, $"visa:{rule.VisaSubclass}:ndis")));
-        return Result<OnboardingResponse>.Success(OnboardingMapper.ToResponse(profile, rule, roadmap.Items));
-    }
-}
-
-public sealed class GetOnboardingProfileHandler(ApplicationDbContext dbContext)
-    : IHandler<GetOnboardingProfileQuery, Result<OnboardingResponse>>
-{
-    public async Task<Result<OnboardingResponse>> HandleAsync(
-        GetOnboardingProfileQuery query,
-        CancellationToken cancellationToken)
-    {
-        var profile = await dbContext.UserProfiles
-            .Where(x => x.UserId == query.UserId)
-            .OrderByDescending(x => x.Version)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (profile is null)
-            return Result<OnboardingResponse>.Failure([OnboardingErrors.ProfileNotFound]);
-
-        var rule = await dbContext.VisaRules.AsNoTracking()
-            .SingleAsync(x => x.VisaSubclass == profile.VisaSubclass, cancellationToken);
-        var roadmap = await dbContext.Roadmaps.Include(x => x.Items)
-            .SingleAsync(x => x.UserProfileId == profile.Id, cancellationToken);
-        return Result<OnboardingResponse>.Success(OnboardingMapper.ToResponse(profile, rule, roadmap.Items));
+        return Result<OnboardingResponse>.Success(
+            OnboardingMapper.ToResponse(profile, rule, roadmap.Items, templates.ToDictionary(x => x.Key)));
     }
 }

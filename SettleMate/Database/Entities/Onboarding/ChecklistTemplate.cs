@@ -17,7 +17,42 @@ public sealed class ChecklistTemplate
     public string? Provider { get; internal set; }
     public string? ApplicationUrl { get; internal set; }
     public string? EligibilityNotes { get; internal set; }
+    public int EstimatedMinutes { get; internal set; } = 30;
+    public bool IsTimeSensitive { get; internal set; }
     public string RequiredDocumentsJson { get; internal set; } = "[]";
+
+    public void Update(
+        string key,
+        int weekNumber,
+        string title,
+        string description,
+        string? visaSubclass,
+        string? state,
+        string? careerGoal,
+        string? provider,
+        string? applicationUrl,
+        string? eligibilityNotes,
+        int estimatedMinutes,
+        bool isTimeSensitive,
+        string requiredDocumentsJson)
+    {
+        Key = key.Trim();
+        WeekNumber = weekNumber;
+        Title = title.Trim();
+        Description = description.Trim();
+        VisaSubclass = Normalize(visaSubclass);
+        State = string.IsNullOrWhiteSpace(state) ? null : state.Trim().ToUpperInvariant();
+        CareerGoal = Normalize(careerGoal);
+        Provider = Normalize(provider);
+        ApplicationUrl = Normalize(applicationUrl);
+        EligibilityNotes = Normalize(eligibilityNotes);
+        EstimatedMinutes = estimatedMinutes;
+        IsTimeSensitive = isTimeSensitive;
+        RequiredDocumentsJson = requiredDocumentsJson;
+    }
+
+    private static string? Normalize(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     public IReadOnlyList<string> RequiredDocuments =>
         JsonSerializer.Deserialize<string[]>(RequiredDocumentsJson) ?? [];

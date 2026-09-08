@@ -9,8 +9,14 @@ internal static class OnboardingMapper
     public static OnboardingResponse ToResponse(
         UserProfile profile,
         VisaRule rule,
-        IEnumerable<RoadmapItem> items) =>
-        new(
+        IEnumerable<RoadmapItem> items,
+        IReadOnlyDictionary<string, ChecklistTemplate>? templates = null)
+    {
+        var orderedItems = items.OrderBy(item => item.WeekNumber)
+            .ThenBy(item => item.Title)
+            .ToArray();
+        var completed = orderedItems.Count(item => item.Completed);
+        return new(
             profile.Id,
             profile.Version,
             profile.Country,
@@ -30,17 +36,34 @@ internal static class OnboardingMapper
                 rule.NdisEligible,
                 rule.BlueCardRequiredForChildRelatedWork,
                 JsonSerializer.Deserialize<string[]>(rule.RequiredDocumentsJson) ?? []),
-            items.OrderBy(item => item.WeekNumber)
-                .ThenBy(item => item.Title)
-                .Select(item => new RoadmapItemResponse(
-                    item.Id,
-                    item.WeekNumber,
-                    ((item.WeekNumber - 1) / 4) + 1,
-                    item.Title,
-                    item.Description,
-                    item.ChecklistTaskId,
-                    item.LinkedChecklistTaskId,
-                    item.Completed))
-                .ToArray());
+            orderedItems.Select(item => MapItem(item, templates))
+                .ToArray(),
+            new OnboardingProgressResponse(
+                orderedItems.Length,
+                completed,
+                orderedItems.Length == 0 ? 0m : Math.Round(completed * 100m / orderedItems.Length, 2)));
+    }
+
+    private static RoadmapItemResponse MapItem(
+        RoadmapItem item,
+        IReadOnlyDictionary<string, ChecklistTemplate>? templates)
+    {
+        ChecklistTemplate? template = null;
+        templates?.TryGetValue(item.LinkedChecklistTaskId, out template);
+        return new RoadmapItemResponse(
+            item.Id,
+            item.WeekNumber,
+            ((item.WeekNumber - 1) / 4) + 1,
+            item.Title,
+            item.Description,
+            item.ChecklistTaskId,
+            item.LinkedChecklistTaskId,
+            item.Completed,
+            template?.RequiredDocuments ?? [],
+            template?.EstimatedMinutes ?? 30,
+            template?.ApplicationUrl,
+            template?.IsTimeSensitive ?? false,
+            item.ChecklistTask?.CompletedAt);
+    }
 
 }

@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SettleMate.Middlewares;
 using FluentValidation;
 using SettleMate.Features.Onboarding.Shared;
+using SettleMate.Features.Onboarding.Commands;
 using SettleMate.Abstractions;
 using SettleMate.Security;
 
@@ -66,3 +67,5 @@ using (var scope = app.Services.CreateScope())
 
 
 await app.RunAsync();
+
+public partial class Program;

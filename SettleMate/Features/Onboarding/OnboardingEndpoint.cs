@@ -17,7 +17,7 @@ public sealed class OnboardingEndpoint : ICarterModule
     {
         app.MapPost("/onboarding/preview", Preview)
             .WithTags(ApiTags.Onboarding)
-            .AllowAnonymous()
+            .RequireAuthorization()
             .Produces<OnboardingResponse>(StatusCodes.Status200OK)
             .ProducesValidationProblem();
 
@@ -57,11 +57,6 @@ public sealed class OnboardingEndpoint : ICarterModule
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapPatch("/checklist/tasks/{taskId:guid}", SetChecklistTaskCompleted)
-            .WithTags(ApiTags.Checklist)
-            .RequireAuthorization()
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound);
     }
 
     private async Task<IResult> Preview(
@@ -133,22 +128,6 @@ public sealed class OnboardingEndpoint : ICarterModule
             return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Authentication required.");
         var result = await handler.HandleAsync(
             new SetRoadmapItemCompletedCommand(userId, itemId, request.Completed),
-            cancellationToken);
-        return result.IsSuccess ? Results.NoContent() : result.ToHttpResult();
-    }
-
-    private async Task<IResult> SetChecklistTaskCompleted(
-        Guid taskId,
-        CompleteRoadmapItemRequest request,
-        ICurrentUser currentUser,
-        IHandler<SetChecklistTaskCompletedCommand, Result<bool>> handler,
-        CancellationToken cancellationToken)
-    {
-        var userId = currentUser.UserId;
-        if (userId is null)
-            return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Authentication required.");
-        var result = await handler.HandleAsync(
-            new SetChecklistTaskCompletedCommand(userId, taskId, request.Completed),
             cancellationToken);
         return result.IsSuccess ? Results.NoContent() : result.ToHttpResult();
     }

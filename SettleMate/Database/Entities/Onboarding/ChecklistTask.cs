@@ -16,6 +16,7 @@ public sealed class ChecklistTask
     public string UserId { get; private set; } = null!;
     public string Key { get; private set; } = null!;
     public bool Completed { get; private set; }
+    public DateTimeOffset? CompletedAt { get; private set; }
     public ICollection<RoadmapItem> RoadmapItems { get; private set; } = [];
 
     public static ChecklistTask Create(string userId, string key, bool completed = false) =>
@@ -24,6 +25,7 @@ public sealed class ChecklistTask
     public void SetCompleted(bool completed)
     {
         Completed = completed;
+        CompletedAt = completed ? DateTimeOffset.UtcNow : null;
         foreach (var item in RoadmapItems)
             item.SetCompletedWithoutSynchronizingTask(completed);
     }
