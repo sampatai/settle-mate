@@ -1,9 +1,11 @@
 ﻿using Carter;
 using Microsoft.AspNetCore.Mvc;
+using SettleMate.Abstractions;
+using SettleMate.Abstractions.Errors;
 using SettleMate.Features.Users.Login;
 using SettleMate.Features.Users.Shared;
 
-namespace JwtAndRefreshTokens.Features.Users;
+namespace SettleMate.Features.Users;
 
 
 public class RefreshTokenEndpoint : ICarterModule
@@ -15,7 +17,7 @@ public class RefreshTokenEndpoint : ICarterModule
 
 	private static async Task<IResult> Handle(
 		[FromBody] RefreshTokenRequest request,
-		RefreshTokenHandler handler,
+        [FromServices] IHandler<RefreshTokenRequest, Result<RefreshTokenResponse>> handler,
 		CancellationToken cancellationToken)
 	{
 		var result = await handler.HandleAsync(request, cancellationToken);

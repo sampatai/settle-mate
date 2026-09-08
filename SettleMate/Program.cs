@@ -31,10 +31,13 @@ builder.Services.Replace(
 builder.Services.AddHealthChecksConfiguration();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
+
 builder.Services.AddValidatorsFromAssemblyContaining<OnboardingProfileValidator>();
 builder.Services.AddHandlersFromAssembly(typeof(Program).Assembly);
 builder.Services.AddExceptionHandler<CustomExceptionHandler>().AddProblemDetails();
 builder.Services.AddCarter();
+builder.Services.AddApplicationServices();
 var app = builder.Build();
 
 app.UseExceptionHandler();

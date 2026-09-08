@@ -1,4 +1,5 @@
 using Carter;
+using Microsoft.AspNetCore.Mvc;
 using SettleMate.Abstractions;
 using SettleMate.Abstractions.Errors;
 using SettleMate.Authorization;
@@ -26,32 +27,32 @@ public sealed class ListingEndpoint : ICarterModule
 
     private static async Task<IResult> Search(
         [AsParameters] ListingSearchQuery query,
-        IHandler<ListingSearchQuery, Result<ListingSearchResponse>> handler,
+        [FromServices] IHandler<ListingSearchQuery, Result<ListingSearchResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(query, cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> Get(
         Guid id,
-        IHandler<GetListingQuery, Result<ListingResponse>> handler,
+        [FromServices] IHandler<GetListingQuery, Result<ListingResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new GetListingQuery(id), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> Create(
         ListingRequest request,
-        IHandler<CreateListingCommand, Result<ListingResponse>> handler,
+        [FromServices] IHandler<CreateListingCommand, Result<ListingResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new CreateListingCommand(request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> Update(
         Guid id,
         ListingRequest request,
-        IHandler<UpdateListingCommand, Result<ListingResponse>> handler,
+        [FromServices] IHandler<UpdateListingCommand, Result<ListingResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new UpdateListingCommand(id, request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> Delete(
         Guid id,
-        IHandler<DeleteListingCommand, Result<bool>> handler,
+        [FromServices] IHandler<DeleteListingCommand, Result<bool>> handler,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new DeleteListingCommand(id), cancellationToken);

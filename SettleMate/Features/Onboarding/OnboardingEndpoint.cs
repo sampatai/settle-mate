@@ -61,7 +61,7 @@ public sealed class OnboardingEndpoint : ICarterModule
 
     private async Task<IResult> Preview(
         OnboardingProfileRequest request,
-        IHandler<PreviewOnboardingQuery, Result<OnboardingResponse>> handler,
+        [FromServices] IHandler<PreviewOnboardingQuery, Result<OnboardingResponse>> handler,
         CancellationToken cancellationToken)
     {
         return (await handler.HandleAsync(
@@ -72,7 +72,7 @@ public sealed class OnboardingEndpoint : ICarterModule
     private async Task<IResult> SaveProfile(
         OnboardingProfileRequest request,
         ICurrentUser currentUser,
-        IHandler<SaveOnboardingProfileCommand, Result<OnboardingResponse>> handler,
+        [FromServices] IHandler<SaveOnboardingProfileCommand, Result<OnboardingResponse>> handler,
         CancellationToken cancellationToken)
     {
         var userId = currentUser.UserId;
@@ -86,7 +86,7 @@ public sealed class OnboardingEndpoint : ICarterModule
     private async Task<IResult> GetRoadmap(
         string userId,
         ICurrentUser currentUser,
-        IHandler<GetOnboardingProfileQuery, Result<OnboardingResponse>> handler,
+        [FromServices] IHandler<GetOnboardingProfileQuery, Result<OnboardingResponse>> handler,
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
@@ -103,7 +103,7 @@ public sealed class OnboardingEndpoint : ICarterModule
         string userId,
         OnboardingProfileRequest request,
         ICurrentUser currentUser,
-        IHandler<SaveOnboardingProfileCommand, Result<OnboardingResponse>> handler,
+        [FromServices] IHandler<SaveOnboardingProfileCommand, Result<OnboardingResponse>> handler,
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
@@ -120,7 +120,7 @@ public sealed class OnboardingEndpoint : ICarterModule
         Guid itemId,
         CompleteRoadmapItemRequest request,
         ICurrentUser currentUser,
-        IHandler<SetRoadmapItemCompletedCommand, Result<bool>> handler,
+        [FromServices] IHandler<SetRoadmapItemCompletedCommand, Result<bool>> handler,
         CancellationToken cancellationToken)
     {
         var userId = currentUser.UserId;

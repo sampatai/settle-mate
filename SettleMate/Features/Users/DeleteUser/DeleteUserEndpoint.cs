@@ -17,7 +17,7 @@ public sealed class DeleteUserEndpoint : ICarterModule
         app.MapDelete("/users/{userId}", async (
                 [FromRoute] string userId,
                 ClaimsPrincipal principal,
-                IHandler<string, Result<bool>> handler,
+                [FromServices] IHandler<string, Result<bool>> handler,
                 CancellationToken cancellationToken) =>
             {
                 if (!IsOwnerOrAdmin(principal, userId))

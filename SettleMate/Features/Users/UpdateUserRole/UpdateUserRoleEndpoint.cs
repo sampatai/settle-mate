@@ -15,7 +15,7 @@ public sealed class UpdateUserRoleEndpoint : ICarterModule
         app.MapPut("/users/{userId}/role", async (
                 [FromRoute] string userId,
                 [FromBody] UpdateUserRoleRequest request,
-                IHandler<UpdateUserRoleCommand, Result<UserResponse>> handler,
+                [FromServices] IHandler<UpdateUserRoleCommand, Result<UserResponse>> handler,
                 CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(

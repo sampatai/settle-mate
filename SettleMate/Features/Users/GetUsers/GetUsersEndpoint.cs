@@ -1,4 +1,5 @@
 using Carter;
+using Microsoft.AspNetCore.Mvc;
 using SettleMate.Authorization;
 using SettleMate.Abstractions;
 using SettleMate.Abstractions.Errors;
@@ -12,7 +13,7 @@ public sealed class GetUsersEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapGet("/users", async (
-                IHandler<Unit, Result<IReadOnlyList<UserResponse>>> handler,
+                [FromServices] IHandler<Unit, Result<IReadOnlyList<UserResponse>>> handler,
                 CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(Unit.Value, cancellationToken);

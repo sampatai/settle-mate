@@ -1,19 +1,21 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using SettleMate.Database;
 using Testcontainers.MsSql;
 
 namespace SettleMate.Tests.Infrastructure;
 
 public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly MsSqlContainer database = new MsSqlBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-        .WithPassword("Strong_password_123!")
-        .Build();
+   
+    private readonly MsSqlContainer database = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04")
+    .WithPassword("Strong_password_123!")
+    .Build();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -29,7 +31,17 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
         });
     }
 
-    public Task InitializeAsync() => database.StartAsync();
+    public async Task InitializeAsync()
+    {
+        await database.StartAsync();
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await db.Database.MigrateAsync();
+    }
 
-    public new Task DisposeAsync() => database.DisposeAsync().AsTask();
+    public new async Task DisposeAsync()
+    {
+        await database.DisposeAsync();
+        await base.DisposeAsync();
+    }
 }

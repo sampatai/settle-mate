@@ -18,7 +18,7 @@ public sealed class UpdateUserEndpoint : ICarterModule
                 [FromRoute] string userId,
                 [FromBody] UpdateUserRequest request,
                 ClaimsPrincipal principal,
-                IHandler<UpdateUserCommand, Result<UserResponse>> handler,
+                [FromServices] IHandler<UpdateUserCommand, Result<UserResponse>> handler,
                 CancellationToken cancellationToken) =>
             {
                 if (!IsOwnerOrAdmin(principal, userId))

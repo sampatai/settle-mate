@@ -1,4 +1,5 @@
 using Carter;
+using Microsoft.AspNetCore.Mvc;
 using SettleMate.Abstractions;
 using SettleMate.Abstractions.Errors;
 using SettleMate.Authorization;
@@ -34,42 +35,42 @@ public sealed class ListingUserEndpoint : ICarterModule
     }
 
     private static async Task<IResult> GetScore(Guid id, Guid? destinationId,
-        IHandler<GetListingScoreQuery, Result<ListingScoreResponse>> handler, CancellationToken cancellationToken) =>
+        [FromServices] IHandler<GetListingScoreQuery, Result<ListingScoreResponse>> handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new GetListingScoreQuery(id, destinationId), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> UpsertScore(Guid id, ListingScoreRequest request,
-        IHandler<UpsertListingScoreCommand, Result<ListingScoreResponse>> handler, CancellationToken cancellationToken) =>
+        [FromServices] IHandler<UpsertListingScoreCommand, Result<ListingScoreResponse>> handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new UpsertListingScoreCommand(id, request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> Save(Guid id,
-        IHandler<SaveListingCommand, Result<SavedListingResponse>> handler, CancellationToken cancellationToken) =>
+        [FromServices] IHandler<SaveListingCommand, Result<SavedListingResponse>> handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new SaveListingCommand(id), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> Remove(Guid id,
-        IHandler<RemoveSavedListingCommand, Result<bool>> handler, CancellationToken cancellationToken)
+        [FromServices] IHandler<RemoveSavedListingCommand, Result<bool>> handler, CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new RemoveSavedListingCommand(id), cancellationToken);
         return result.IsSuccess ? Results.NoContent() : result.ToHttpResult();
     }
 
     private static async Task<IResult> GetSaved([AsParameters] GetSavedListingsQuery query,
-        IHandler<GetSavedListingsQuery, Result<PagedResponse<SavedListingResponse>>> handler, CancellationToken cancellationToken) =>
+        [FromServices] IHandler<GetSavedListingsQuery, Result<PagedResponse<SavedListingResponse>>> handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(query, cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> GetDestinations(
-        IHandler<GetDestinationsQuery, Result<IReadOnlyList<UserDestinationResponse>>> handler, CancellationToken cancellationToken) =>
+        [FromServices] IHandler<GetDestinationsQuery, Result<IReadOnlyList<UserDestinationResponse>>> handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new GetDestinationsQuery(), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> AddDestination(UserDestinationRequest request,
-        IHandler<AddDestinationCommand, Result<UserDestinationResponse>> handler, CancellationToken cancellationToken) =>
+        [FromServices] IHandler<AddDestinationCommand, Result<UserDestinationResponse>> handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new AddDestinationCommand(request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> UpdateDestination(Guid id, UserDestinationRequest request,
-        IHandler<UpdateDestinationCommand, Result<UserDestinationResponse>> handler, CancellationToken cancellationToken) =>
+        [FromServices] IHandler<UpdateDestinationCommand, Result<UserDestinationResponse>> handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new UpdateDestinationCommand(id, request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> DeleteDestination(Guid id,
-        IHandler<DeleteDestinationCommand, Result<bool>> handler, CancellationToken cancellationToken)
+        [FromServices] IHandler<DeleteDestinationCommand, Result<bool>> handler, CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new DeleteDestinationCommand(id), cancellationToken);
         return result.IsSuccess ? Results.NoContent() : result.ToHttpResult();

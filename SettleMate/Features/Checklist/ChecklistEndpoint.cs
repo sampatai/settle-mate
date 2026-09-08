@@ -1,4 +1,5 @@
 using Carter;
+using Microsoft.AspNetCore.Mvc;
 using SettleMate.Abstractions;
 using SettleMate.Abstractions.Errors;
 using SettleMate.Constants;
@@ -49,7 +50,7 @@ public sealed class ChecklistEndpoint : ICarterModule
     private static async Task<IResult> GetChecklist(
         string userId,
         ICurrentUser currentUser,
-        IHandler<GetChecklistQuery, Result<ChecklistResponse>> handler,
+        [FromServices] IHandler<GetChecklistQuery, Result<ChecklistResponse>> handler,
         CancellationToken cancellationToken)
     {
         var accessResult = EnsureUserAccess(userId, currentUser);
@@ -63,7 +64,7 @@ public sealed class ChecklistEndpoint : ICarterModule
         string userId,
         Guid taskId,
         ICurrentUser currentUser,
-        IHandler<CompleteChecklistTaskCommand, Result<bool>> handler,
+        [FromServices] IHandler<CompleteChecklistTaskCommand, Result<bool>> handler,
         CancellationToken cancellationToken)
     {
         var accessResult = EnsureUserAccess(userId, currentUser);
@@ -79,7 +80,7 @@ public sealed class ChecklistEndpoint : ICarterModule
         string userId,
         Guid taskId,
         ICurrentUser currentUser,
-        IHandler<ReopenChecklistTaskCommand, Result<bool>> handler,
+        [FromServices] IHandler<ReopenChecklistTaskCommand, Result<bool>> handler,
         CancellationToken cancellationToken)
     {
         var accessResult = EnsureUserAccess(userId, currentUser);
@@ -94,7 +95,7 @@ public sealed class ChecklistEndpoint : ICarterModule
     private static async Task<IResult> GetProgress(
         string userId,
         ICurrentUser currentUser,
-        IHandler<GetChecklistProgressQuery, Result<ChecklistProgressResponse>> handler,
+        [FromServices] IHandler<GetChecklistProgressQuery, Result<ChecklistProgressResponse>> handler,
         CancellationToken cancellationToken)
     {
         var accessResult = EnsureUserAccess(userId, currentUser);

@@ -1,4 +1,5 @@
 using Carter;
+using Microsoft.AspNetCore.Mvc;
 using SettleMate.Abstractions;
 using SettleMate.Abstractions.Errors;
 using SettleMate.Authorization;
@@ -39,32 +40,32 @@ public sealed class ContentEndpoint : ICarterModule
 
     private static async Task<IResult> ListChecklistTemplates(
         [AsParameters] ListChecklistTemplatesQuery query,
-        IHandler<ListChecklistTemplatesQuery, Result<PagedResponse<ChecklistTemplateResponse>>> handler,
+        [FromServices] IHandler<ListChecklistTemplatesQuery, Result<PagedResponse<ChecklistTemplateResponse>>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(query, cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> GetChecklistTemplate(
         Guid id,
-        IHandler<GetChecklistTemplateQuery, Result<ChecklistTemplateResponse>> handler,
+        [FromServices] IHandler<GetChecklistTemplateQuery, Result<ChecklistTemplateResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new GetChecklistTemplateQuery(id), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> CreateChecklistTemplate(
         ChecklistTemplateRequest request,
-        IHandler<CreateChecklistTemplateCommand, Result<ChecklistTemplateResponse>> handler,
+        [FromServices] IHandler<CreateChecklistTemplateCommand, Result<ChecklistTemplateResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new CreateChecklistTemplateCommand(request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> UpdateChecklistTemplate(
         Guid id,
         ChecklistTemplateRequest request,
-        IHandler<UpdateChecklistTemplateCommand, Result<ChecklistTemplateResponse>> handler,
+        [FromServices] IHandler<UpdateChecklistTemplateCommand, Result<ChecklistTemplateResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new UpdateChecklistTemplateCommand(id, request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> DeleteChecklistTemplate(
         Guid id,
-        IHandler<DeleteChecklistTemplateCommand, Result<bool>> handler,
+        [FromServices] IHandler<DeleteChecklistTemplateCommand, Result<bool>> handler,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new DeleteChecklistTemplateCommand(id), cancellationToken);
@@ -73,32 +74,32 @@ public sealed class ContentEndpoint : ICarterModule
 
     private static async Task<IResult> ListVisaRules(
         [AsParameters] ListVisaRulesQuery query,
-        IHandler<ListVisaRulesQuery, Result<PagedResponse<VisaRuleResponse>>> handler,
+        [FromServices] IHandler<ListVisaRulesQuery, Result<PagedResponse<VisaRuleResponse>>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(query, cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> GetVisaRule(
         string visaSubclass,
-        IHandler<GetVisaRuleQuery, Result<VisaRuleResponse>> handler,
+        [FromServices] IHandler<GetVisaRuleQuery, Result<VisaRuleResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new GetVisaRuleQuery(visaSubclass), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> CreateVisaRule(
         VisaRuleRequest request,
-        IHandler<CreateVisaRuleCommand, Result<VisaRuleResponse>> handler,
+        [FromServices] IHandler<CreateVisaRuleCommand, Result<VisaRuleResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new CreateVisaRuleCommand(request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> UpdateVisaRule(
         string visaSubclass,
         VisaRuleRequest request,
-        IHandler<UpdateVisaRuleCommand, Result<VisaRuleResponse>> handler,
+        [FromServices] IHandler<UpdateVisaRuleCommand, Result<VisaRuleResponse>> handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(new UpdateVisaRuleCommand(visaSubclass, request), cancellationToken)).ToHttpResult();
 
     private static async Task<IResult> DeleteVisaRule(
         string visaSubclass,
-        IHandler<DeleteVisaRuleCommand, Result<bool>> handler,
+        [FromServices] IHandler<DeleteVisaRuleCommand, Result<bool>> handler,
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(new DeleteVisaRuleCommand(visaSubclass), cancellationToken);

@@ -13,7 +13,7 @@ public sealed class CreateUserEndpoint : ICarterModule
     {
         app.MapPost("/users", async (
                 [FromBody] CreateUserRequest request,
-                IHandler<CreateUserRequest, Result<UserResponse>> handler,
+                [FromServices] IHandler<CreateUserRequest, Result<UserResponse>> handler,
                 CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);

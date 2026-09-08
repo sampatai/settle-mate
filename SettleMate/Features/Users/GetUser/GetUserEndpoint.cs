@@ -17,7 +17,7 @@ public sealed class GetUserEndpoint : ICarterModule
         app.MapGet("/users/{userId}", async (
                 [FromRoute] string userId,
                 ClaimsPrincipal principal,
-                IHandler<string, Result<UserResponse>> handler,
+                [FromServices] IHandler<string, Result<UserResponse>> handler,
                 CancellationToken cancellationToken) =>
             {
                 if (!IsOwnerOrAdmin(principal, userId))

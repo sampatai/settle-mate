@@ -13,7 +13,7 @@ namespace SettleMate.Features.Users.Login
         public void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("login", async (
-            IHandler<LoginUserRequest, Result<LoginResponse>> handler,
+            [FromServices] IHandler<LoginUserRequest, Result<LoginResponse>> handler,
             [FromBody] LoginUserRequest request,
             CancellationToken cancellationToken) =>
             {
