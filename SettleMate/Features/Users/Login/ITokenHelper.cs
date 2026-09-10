@@ -51,10 +51,12 @@ namespace SettleMate.Features.Users.Login
             }
 
             var (token, refreshToken) = await GenerateJwtAndRefreshTokenAsync(user, null);
+            var roles = await userManager.GetRolesAsync(user);
+            var userResponse = UserResponse.FromUser(user, roles);
 
-            return Result<LoginResponse>.Success(new LoginResponse(token, refreshToken));
+            return Result<LoginResponse>.Success(new LoginResponse(token, refreshToken, userResponse));
         }
-        public async Task<Result<RefreshTokenResponse>> RefreshTokenAsync(string token, string refreshToken, CancellationToken cancellationToken)
+        public async Task<Result<RefreshTokenResponse>> RefreshTokenAsync(string token, string refreshToken, CancellationToken cancellationToken = default)
         {
             var validatedToken = GetPrincipalFromToken(token, tokenValidationParameters);
             if (validatedToken is null)

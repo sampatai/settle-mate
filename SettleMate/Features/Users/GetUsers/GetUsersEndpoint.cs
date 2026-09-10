@@ -26,8 +26,3 @@ public sealed class GetUsersEndpoint : ICarterModule
             .Produces(StatusCodes.Status403Forbidden);
     }
 }
-
-public readonly record struct Unit
-{
-    public static Unit Value => default;
-}

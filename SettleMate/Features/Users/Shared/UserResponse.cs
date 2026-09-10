@@ -2,7 +2,7 @@ using SettleMate.Database.Entities.Identity;
 
 namespace SettleMate.Features.Users.Shared;
 
-public sealed record LoginResponse(string Token, string RefreshToken);
+public sealed record LoginResponse(string Token, string RefreshToken, UserResponse User);
 
 public sealed record UserResponse(
     string Id,
